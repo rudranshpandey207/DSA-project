@@ -52,6 +52,14 @@ public:
     void sellShares(int shares) {
         availableShares += shares;
     }
+
+    void displayPriceHistory() const {
+        cout << "Price history for " << symbol << ":\n";
+        for (const auto& price : priceHistory) {
+            cout << fixed << setprecision(2) << price << " ";
+        }
+        cout << endl;
+    }
 };
 
 class Portfolio {
@@ -94,7 +102,7 @@ public:
         }
     }
 
-    void displayPortfolio() const {
+    void displayPortfolioSummary() const {
         cout << "\n=== Portfolio Summary ===\n";
         cout << "Cash: $" << fixed << setprecision(2) << cash << "\n\n";
         cout << "Holdings:\n";
@@ -125,7 +133,7 @@ public:
     }
 
     void selectPortfolio(const string& name) {
-        if (portfolios.find(name) != portfolios.end()) {
+        if (portfolios.find(name ) != portfolios.end()) {
             currentPortfolioName = name;
             cout << "Selected portfolio: " << name << "\n";
         } else {
@@ -162,6 +170,8 @@ public:
         stocks.emplace("AAPL", Stock("AAPL", 150.0, 1000));
         stocks.emplace("GOOG", Stock("GOOG", 2500.0, 500));
         stocks.emplace("MSFT", Stock("MSFT", 200.0, 2000));
+        stocks.emplace("AMZN", Stock("AMZN", 3000.0, 1500));
+        stocks.emplace("TSLA", Stock("TSLA", 700.0, 800));
     }
 
     Stock& getStock(const string& symbol) {
@@ -189,12 +199,20 @@ public:
         cout << "\n=== Market News ===\n";
         cout << "No news available.\n";
     }
+
+    void searchStock(const string& symbol) const {
+        if (stocks.find(symbol) != stocks.end()) {
+            cout << "Stock found: " << symbol << " - $" << stocks.at(symbol).getCurrentPrice() << "\n";
+        } else {
+            cout << "Stock not found: " << symbol << "\n";
+        }
+    }
 };
 
 int main() {
     StockMarket market;
     PortfolioManager portfolioManager;
-    char choice;
+    string choice;  // Change from char to string
 
     cout << "Welcome to Stock Market Simulator!\n";
 
@@ -206,120 +224,132 @@ int main() {
         cout << "4. Buy Stock\n";
         cout << "5. Sell Stock\n";
         cout << "6. View Transaction History\n";
-        cout << "7. Advance Time (Update Market)\n";
-        cout << "8. Exit\n";
+        cout << "7. View Portfolio Summary\n";
+        cout << "8. Search for a Stock\n";
+        cout << "9. View Stock Price History\n";
+        cout << "10. Advance Time (Update Market)\n";
+        cout << "11. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
-        try {
-            switch (choice) {
-                case '1':
-                    market.displayMarketStatus();
-                    break;
-                
-                case '2':
-                    market.displayMarketNews();
-                    break;
-                
-                case '3': {
-                    char portfolioChoice;
-                    cout << "\n=== Portfolio Management ===\n";
-                    cout << "1. Create New Portfolio\n";
-                    cout << "2. Select Existing Portfolio\n";
-                    cout << "3. Display Available Portfolios\n";
-                    cout << "4. Back to Main Menu\n";
-                    cout << "Enter your choice: ";
-                    cin >> portfolioChoice;
+        // Validate input
+        if (cin.fail()) {
+            cin.clear(); // Clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Ignore the rest of the line
+            cout << "Invalid input. Please enter a number from 1 to 11.\n";
+            continue; // Skip the rest of the loop
+        }
 
-                    switch (portfolioChoice) {
-                        case '1': {
-                            string name;
-                            cout << "Enter portfolio name: ";
-                            cin >> name;
-                            portfolioManager.createPortfolio(name);
-                            break;
-                        }
-                        
-                        case '2': {
-                            string name;
-                            cout << "Enter portfolio name: ";
-                            cin >> name;
-                            portfolioManager.selectPortfolio(name);
-                            break;
-                        }
-                        
-                        case '3':
-                            portfolioManager.displayPortfolios();
-                            break;
- case '4':
-                            break;
-                        
-                        default:
-                            cout << "Invalid choice. Please try again.\n";
-                    }
-                    break;
+        try {
+            if (choice == "1") {
+                market.displayMarketStatus();
+            } else if (choice == "2") {
+                market.displayMarketNews();
+            } else if (choice == "3") {
+                char portfolioChoice;
+                cout << "\n=== Portfolio Management ===\n";
+                cout << "1. Create New Portfolio\n";
+                cout << "2. Select Existing Portfolio\n";
+                cout << "3. Display Available Portfolios\n";
+                cout << "4. Back to Main Menu\n";
+                cout << "Enter your choice: ";
+                cin >> portfolioChoice;
+
+                if (cin.fail()) {
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    cout << "Invalid input. Please enter a valid option.\n";
+                    continue;
                 }
-                
-                case '4': {
-                    if (!portfolioManager.hasPortfolios()) {
-                        cout << "No portfolios created. Please create a portfolio first.\n";
+
+                switch (portfolioChoice) {
+                    case '1': {
+                        string name;
+                        cout << "Enter portfolio name: ";
+                        cin >> name;
+                        portfolioManager.createPortfolio(name);
                         break;
                     }
-                    
-                    string symbol;
-                    int shares;
-                    cout << "Enter stock symbol: ";
-                    cin >> symbol;
-                    cout << "Enter number of shares: ";
-                    cin >> shares;
-                    Portfolio& currentPortfolio = portfolioManager.getCurrentPortfolio();
-                    currentPortfolio.buyStock(market.getStock(symbol), shares);
-                    break;
-                }
-                
-                case '5': {
-                    if (!portfolioManager.hasPortfolios()) {
-                        cout << "No portfolios created. Please create a portfolio first.\n";
+                    case '2': {
+                        string name;
+                        cout << "Enter portfolio name: ";
+                        cin >> name;
+                        portfolioManager.selectPortfolio(name);
                         break;
                     }
-                    
-                    string symbol;
-                    int shares;
-                    cout << "Enter stock symbol: ";
-                    cin >> symbol;
-                    cout << "Enter number of shares: ";
-                    cin >> shares;
-                    Portfolio& currentPortfolio = portfolioManager.getCurrentPortfolio();
-                    currentPortfolio.sellStock(market.getStock(symbol), shares);
-                    break;
-                }
-                
-                case '6': {
-                    if (!portfolioManager.hasPortfolios()) {
-                        cout << "No portfolios created. Please create a portfolio first.\n";
+                    case '3':
+                        portfolioManager.displayPortfolios();
                         break;
-                    }
-                    
-                    portfolioManager.getCurrentPortfolio().displayTransactionHistory();
+                    case '4':
+                        break;
+                    default:
+                        cout << "Invalid choice. Please try again.\n";
+                }
+            } else if (choice == "4") {
+                if (!portfolioManager.hasPortfolios()) {
+                    cout << "No portfolios created. Please create a portfolio first.\n";
                     break;
                 }
                 
-                case '7':
-                    market.updateMarket();
-                    cout << "Market updated!\n";
+                string symbol;
+                int shares;
+                cout << "Enter stock symbol: ";
+                cin >> symbol;
+                cout << "Enter number of shares: ";
+                cin >> shares;
+                Portfolio& currentPortfolio = portfolioManager.getCurrentPortfolio();
+                currentPortfolio.buyStock(market.getStock(symbol), shares);
+            } else if (choice == "5") {
+                if (!portfolioManager.hasPortfolios()) {
+                    cout << "No portfolios created. Please create a portfolio first.\n";
                     break;
+                }
                 
-                case '8':
-                    cout << "Thank you for using Stock Market Simulator!\n";
+                string symbol;
+                int shares;
+                cout << "Enter stock symbol: ";
+                cin >> symbol;
+                cout << "Enter number of shares: ";
+                cin >> shares;
+                Portfolio& currentPortfolio = portfolioManager.getCurrentPortfolio();
+                currentPortfolio.sellStock(market.getStock(symbol), shares);
+            } else if (choice == "6") {
+                if (!portfolioManager.hasPortfolios()) {
+                    cout << "No portfolios created. Please create a portfolio first.\n";
                     break;
+                }
                 
-                default:
-                    cout << "Invalid choice. Please try again.\n";
+                portfolioManager.getCurrentPortfolio().displayTransactionHistory();
+            } else if (choice == "7") {
+                if (!portfolioManager.hasPortfolios ()) {
+                    cout << "No portfolios created. Please create a portfolio first.\n";
+                    break;
+                }
+                
+                portfolioManager.getCurrentPortfolio().displayPortfolioSummary();
+            } else if (choice == "8") {
+                string symbol;
+                cout << "Enter stock symbol: ";
+                cin >> symbol;
+                market.searchStock(symbol);
+            } else if (choice == "9") {
+                string symbol;
+                cout << "Enter stock symbol: ";
+                cin >> symbol;
+                market.getStock(symbol).displayPriceHistory();
+            } else if (choice == "10") {
+                market.updateMarket();
+                cout << "Market updated!\n";
+            } else if (choice == "11") {
+                cout << "Thank you for using Stock Market Simulator!\n";
+                break;
+            } else {
+                cout << "Invalid choice. Please try again.\n";
             }
         } catch (const runtime_error& e) {
             cout << "Error: " << e.what() << "\n";
         }
-    } while (choice != '8');
+    } while (choice != "11");
 
     return 0;
 }
