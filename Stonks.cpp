@@ -97,7 +97,7 @@ public:
         
         // For debugging, print the node count
         count++;
-        if (count > 100) { // Arbitrary limit to detect infinite loop
+        if (count > 10) { // Arbitrary limit to detect infinite loop
             cout << "\nInfinite loop detected! Breaking.";
             break;
         }
